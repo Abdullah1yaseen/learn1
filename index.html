@@ -198,7 +198,6 @@
 
     <!-- Firebase SDK (ES Modules) -->
     <script type="module">
-        // 1) استيراد وحدات Firebase Auth
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
         import {
             getAuth,
@@ -212,7 +211,6 @@
             signInWithPopup
         } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-        // 2) إعدادات مشروعك — استبدل القيم بقيم مشروعك من Firebase Console
         const firebaseConfig = {
             apiKey: "AIzaSyAj6m9YrZpzRgz4ut0Af96mllFD4P6d7-w",
             authDomain: "learn-61dc9.firebaseapp.com",
@@ -222,12 +220,10 @@
             appId: "1:6086146160:web:30d6189cfcba7faecb5cb5",
             measurementId: "G-0L52XNVZPL"
         };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // عناصر الواجهة
         const $ = (s) => document.querySelector(s);
         const emailEl = $("#email");
         const passEl = $("#password");
@@ -241,86 +237,73 @@
             $("#togglePwd").textContent = isPwd ? "إخفاء" : "إظهار";
         });
 
-        // مبدل رسائل
         const showMsg = (text, ok = false) => {
             msgEl.textContent = text || "";
             msgEl.className = ok ? "ok" : "err";
         };
 
-        // مراقبة حالة تسجيل الدخول
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 const name = user.displayName || "—";
                 const email = user.email || "—";
-                userBox.innerHTML = ✅ مستخدم مسجل: <br>UID: <b>${user.uid}</b><br>الاسم: <b>${name}</b><br>البريد: <b>${email}</b>;
-                    userBox.classList.remove("hidden");
-      } else {
-                        userBox.classList.add("hidden");
-      }
-    });
+                userBox.innerHTML = `✅ مستخدم مسجل:<br>UID: <b>${user.uid}</b><br>الاسم: <b>${name}</b><br>البريد: <b>${email}</b>`;
+                userBox.classList.remove("hidden");
+            } else {
+                userBox.classList.add("hidden");
+            }
+        });
 
-    // دخول بالبريد/كلمة المرور
-    $("#btnLogin").addEventListener("click", async()=>{
-      try{
-                        showMsg("");
-                    await signInWithEmailAndPassword(auth, emailEl.value, passEl.value);
-                    showMsg("تم تسجيل الدخول بنجاح", true);
-      }catch(e){showMsg(mapAuthError(e)); }
-    });
+        $("#btnLogin").addEventListener("click", async () => {
+            try {
+                showMsg("");
+                await signInWithEmailAndPassword(auth, emailEl.value, passEl.value);
+                showMsg("تم تسجيل الدخول بنجاح", true);
+            } catch (e) { showMsg(mapAuthError(e)); }
+        });
 
-    // إنشاء حساب جديد
-    $("#btnSignup").addEventListener("click", async()=>{
-      try{
-                        showMsg("");
-                    await createUserWithEmailAndPassword(auth, emailEl.value, passEl.value);
-                    showMsg("تم إنشاء الحساب وتسجيل الدخول", true);
-      }catch(e){showMsg(mapAuthError(e)); }
-    });
+        $("#btnSignup").addEventListener("click", async () => {
+            try {
+                showMsg("");
+                await createUserWithEmailAndPassword(auth, emailEl.value, passEl.value);
+                showMsg("تم إنشاء الحساب وتسجيل الدخول", true);
+            } catch (e) { showMsg(mapAuthError(e)); }
+        });
 
-    // دخول مجهول
-    $("#btnAnon").addEventListener("click", async()=>{
-      try{showMsg(""); await signInAnonymously(auth); showMsg("تم الدخول المجهول", true); }
-                    catch(e){showMsg(mapAuthError(e)); }
-    });
+        $("#btnAnon").addEventListener("click", async () => {
+            try { showMsg(""); await signInAnonymously(auth); showMsg("تم الدخول المجهول", true); }
+            catch (e) { showMsg(mapAuthError(e)); }
+        });
 
-    // دخول بحساب Google (نافذة منبثقة)
-    $("#btnGoogle").addEventListener("click", async()=>{
-      try{showMsg(""); await signInWithPopup(auth, provider); showMsg("تم تسجيل الدخول عبر Google", true); }
-                    catch(e){showMsg(mapAuthError(e)); }
-    });
+        $("#btnGoogle").addEventListener("click", async () => {
+            try { showMsg(""); await signInWithPopup(auth, provider); showMsg("تم تسجيل الدخول عبر Google", true); }
+            catch (e) { showMsg(mapAuthError(e)); }
+        });
 
-    // رابط استرجاع كلمة المرور
-    $("#btnReset").addEventListener("click", async()=>{
-      try{
-                        await sendPasswordResetEmail(auth, emailEl.value);
-                    showMsg("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك", true);
-      }catch(e){showMsg(mapAuthError(e)); }
-    });
+        $("#btnReset").addEventListener("click", async () => {
+            try {
+                await sendPasswordResetEmail(auth, emailEl.value);
+                showMsg("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك", true);
+            } catch (e) { showMsg(mapAuthError(e)); }
+        });
 
-    // خروج
-    $("#btnLogout").addEventListener("click", async()=>{
-      try{await signOut(auth); showMsg("تم تسجيل الخروج", true); }
-                    catch(e){showMsg(mapAuthError(e)); }
-    });
+        $("#btnLogout").addEventListener("click", async () => {
+            try { await signOut(auth); showMsg("تم تسجيل الخروج", true); }
+            catch (e) { showMsg(mapAuthError(e)); }
+        });
 
-                    // مساعد لرسائل الأخطاء المفهومة
-                    function mapAuthError(e){
-      const code = e?.code || "unknown";
-                    const table = {
-                        "auth/invalid-email": "البريد الإلكتروني غير صالح",
-                    "auth/missing-password": "الرجاء إدخال كلمة المرور",
-                    "auth/weak-password": "كلمة المرور ضعيفة (جرّب 6 أحرف فأكثر)",
-                    "auth/email-already-in-use": "هذا البريد مستخدم مسبقًا",
-                    "auth/invalid-credential": "بيانات الدخول غير صحيحة",
-                    "auth/popup-closed-by-user": "تم إغلاق نافذة Google قبل إكمال العملية",
-                    "auth/operation-not-allowed": "المزوّد غير مفعّل — فعِّله من Console",
-      };
-                    return table[code] || حدث خطأ: ${code};
-    }
-
-        // 💡 ملاحظة مهمة:
-        // إذا فتحت الملف عبر file:// قد تواجه قيود متصفح. استعمل خادم محلي (Live Server في VS Code)
-        // أو ارفع الملف لأي استضافة ثابتة (GitHub Pages / Firebase Hosting بالرفع من المتصفح).
+        function mapAuthError(e) {
+            const code = e?.code || "unknown";
+            const table = {
+                "auth/invalid-email": "البريد الإلكتروني غير صالح",
+                "auth/missing-password": "الرجاء إدخال كلمة المرور",
+                "auth/weak-password": "كلمة المرور ضعيفة (جرّب 6 أحرف فأكثر)",
+                "auth/email-already-in-use": "هذا البريد مستخدم مسبقًا",
+                "auth/invalid-credential": "بيانات الدخول غير صحيحة",
+                "auth/popup-closed-by-user": "تم إغلاق نافذة Google قبل إكمال العملية",
+                "auth/operation-not-allowed": "المزوّد غير مفعّل — فعِّله من Console",
+            };
+            return table[code] || `حدث خطأ: ${code}`;
+        }
     </script>
 </body>
 
