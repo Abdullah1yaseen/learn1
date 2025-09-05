@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>تسجيل الدخول</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #111827;
+            --muted: #94a3b8;
+            --brand: #22c55e;
+            --danger: #ef4444
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Tajawal, Arial;
+            background: var(--bg);
+            color: #e5e7eb;
+        }
+
+        .wrap {
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            padding: 24px
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--card);
+            border: 1px solid #1f2937;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .25)
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 24px
+        }
+
+        p {
+            margin: 0 0 16px;
+            color: var(--muted)
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 6px
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            background: #0b1220;
+            color: #e5e7eb
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px
+        }
+
+        button {
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid #16a34a;
+            background: var(--brand);
+            color: #0b1220;
+            cursor: pointer;
+            font-weight: 600
+        }
+
+        button:hover {
+            filter: brightness(.95)
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .err {
+            margin-top: 10px;
+            color: var(--danger);
+            font-size: 14px;
+            min-height: 20px
+        }
+
+        .hint {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #9ca3af
+        }
+
+        .footer {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: center
+        }
+
+        .toggle {
+            border: 1px solid #334155;
+            background: #0b1220;
+            color: #e5e7eb;
+            padding: 10px 12px;
+            border-radius: 12px
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="wrap">
+        <form class="card" id="loginForm" novalidate>
+            <h1>تسجيل الدخول</h1>
+            <p class="muted">نموذج بسيط للتعلم فقط (لا يتصل بأي خادم).</p>
+
+            <label for="username">اسم المستخدم</label>
+            <input id="username" name="username" type="text" placeholder="مثال: admin" required />
+
+            <label for="password">كلمة المرور</label>
+            <div class="row">
+                <input id="password" name="password" type="password" placeholder="مثال: 123456" required />
+                <button class="toggle" type="button" id="togglePwd">إظهار</button>
+            </div>
+
+            <div class="actions">
+                <label class="row" style="user-select:none">
+                    <input type="checkbox" id="remember" />
+                    <span class="muted">تذكّرني (محليًا)</span>
+                </label>
+                <button id="btnLogin" type="submit">دخول</button>
+            </div>
+
+            <div class="err" id="error"></div>
+            <div class="hint">بيانات تجريبية افتراضية: <b>admin</b> / <b>123456</b> (يمكنك تغييرها من الكود).</div>
+            <div class="footer">💡 للاستخدام التعليمي فقط — لا تضع كلمات مرور حقيقية هنا.</div>
+        </form>
+    </div>
+
+    <script>
+        import { initializeApp } from "firebase/app";
+        import { getAnalytics } from "firebase/analytics";
+        // ✳️ بيانات تجريبية (عدّلها كما تريد)
+        const DEMO_USER = { username: "admin", password: "123456" };
+
+        const form = document.getElementById("loginForm");
+        const errorEl = document.getElementById("error");
+        const usernameEl = document.getElementById("username");
+        const passwordEl = document.getElementById("password");
+        const rememberEl = document.getElementById("remember");
+
+        // زر إظهار/إخفاء كلمة المرور
+        document.getElementById("togglePwd").addEventListener("click", function () {
+            const isPwd = passwordEl.getAttribute("type") === "password";
+            passwordEl.setAttribute("type", isPwd ? "text" : "password");
+            this.textContent = isPwd ? "إخفاء" : "إظهار";
+        });
+
+        // تحميل اسم المستخدم المخزن (اختياري محليًا)
+        (function () {
+            const saved = localStorage.getItem("demo_username");
+            if (saved) { usernameEl.value = saved; rememberEl.checked = true; }
+        })();
+
+        // معالجة تسجيل الدخول
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            errorEl.textContent = "";
+
+            const u = usernameEl.value.trim();
+            const p = passwordEl.value;
+
+            if (!u || !p) {
+                errorEl.textContent = "الرجاء إدخال اسم المستخدم وكلمة المرور";
+                return;
+            }
+            // Import the functions you need from the SDKs you need
+            // TODO: Add SDKs for Firebase products that you want to use
+            // https://firebase.google.com/docs/web/setup#available-libraries
+
+            // Your web app's Firebase configuration
+            // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+            const firebaseConfig = {
+                apiKey: "AIzaSyAj6m9YrZpzRgz4ut0Af96mllFD4P6d7-w",
+                authDomain: "learn-61dc9.firebaseapp.com",
+                projectId: "learn-61dc9",
+                storageBucket: "learn-61dc9.firebasestorage.app",
+                messagingSenderId: "6086146160",
+                appId: "1:6086146160:web:30d6189cfcba7faecb5cb5",
+                measurementId: "G-0L52XNVZPL"
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+            // تحقق بسيط على المتصفح فقط (تعليمي)
+            if (u === DEMO_USER.username && p === DEMO_USER.password) {
+                if (rememberEl.checked) {
+                    localStorage.setItem("demo_username", u);
+                } else {
+                    localStorage.removeItem("demo_username");
+                }
+                // نجاح: يمكنك استبدال هذا بالتوجيه لصفحة أخرى
+                alert("تم تسجيل الدخول بنجاح — (تعليمي)");
+                // مثال لتوجيه داخلي: window.location.href = "dashboard.html";
+            } else {
+                errorEl.textContent = "بيانات الدخول غير صحيحة";
+            }
+        });
+    </script>
+</body>
+
+</html>
